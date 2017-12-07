@@ -18,7 +18,7 @@ It uses markers (org.slf4j.Marker) to define key-value pairs so it can seamlessl
         </dependency>
 ```
 
-To log using ???, use LogFmtLayout in your logback.xml.
+To log using escalog, use **LogFmtLayout** in your logback.xml.
 Here is an example which outputs to stdout in logfmt format :
 ```xml
 <configuration>
@@ -40,7 +40,7 @@ Here is an example which outputs to stdout in logfmt format :
 
 ### Using LogFmt logger
 
-The logger LogFmt is built on top of slf4j Logger, it provides all of its methods and additional logfmt specific methods.
+The logger **LogFmt** is built on top of slf4j Logger, it provides all of its methods and additional logfmt specific methods.
 Here is an example of how you can use it :
 ```java
 LogFmt logger = LogFmt.from(LoggerFactory.getLogger(LogFmtLayoutTest.class));
@@ -51,7 +51,7 @@ logger.with("key1", "value1").and("key2", "value2").info("Everything is {}", "ok
 
 ### Using slf4j logger
  
-The same can also be done with slf4j Logger using LogFmtMarker :
+The same can also be done with slf4j Logger using **LogFmtMarker** :
 ```java
 LogFmt logger = LoggerFactory.getLogger(LogFmtLayoutTest.class);
 
