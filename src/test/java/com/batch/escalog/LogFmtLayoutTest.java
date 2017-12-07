@@ -10,6 +10,7 @@ import org.slf4j.Marker;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.batch.escalog.LogFmtLayout.escapeValue;
@@ -49,7 +50,7 @@ public class LogFmtLayoutTest
         Calendar calendar = Calendar.getInstance();
         calendar.set(2017, Calendar.NOVEMBER, 30, 15, 10, 25);
         ILoggingEvent loggingEvent = createLoggingEvent("thread0", Level.DEBUG, calendar.getTime(),
-            with("key1", "value1").and("key2", "val ue2"), "message with \"double quotes\"");
+            with("key1", "value1").and("key2", "val ue2"), "message with \"double quotes\"", null);
 
 
         assertEquals(
@@ -57,11 +58,31 @@ public class LogFmtLayoutTest
             logFmtLayout.doLayout(loggingEvent)
         );
 
-        
     }
 
+    @Test
+    public void fieldsConfigTest()
+    {
+        LogFmtLayout logFmtLayout = new LogFmtLayout();
+        logFmtLayout.setFields("time, mdc, custom, level, msg");
+        logFmtLayout.setTimeFormat("YYYY");
 
-    ILoggingEvent createLoggingEvent(String threadName, Level logLevel, Date date, Marker marker, String msg)
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(2017, Calendar.NOVEMBER, 30, 15, 10, 25);
+
+        Map<String, String> mdc = new HashMap<>();
+        mdc.put("mdckey", "mdc value");
+
+        ILoggingEvent loggingEvent = createLoggingEvent("thread0", Level.DEBUG, calendar.getTime(),
+            with("key1", "value1").and("key2", "val ue2"), "message with \"double quotes\"", mdc);
+
+        assertEquals(
+            "time=2017 mdckey=\"mdc value\" key1=value1 key2=\"val ue2\" level=debug msg=\"message with \\\"double quotes\\\"\"\n",
+            logFmtLayout.doLayout(loggingEvent)
+        );
+    }
+
+    ILoggingEvent createLoggingEvent(String threadName, Level logLevel, Date date, Marker marker, String msg, Map<String, String> mdc)
     {
         return new ILoggingEvent()
         {
@@ -134,7 +155,7 @@ public class LogFmtLayoutTest
             @Override
             public Map<String, String> getMDCPropertyMap()
             {
-                return null;
+                return mdc;
             }
 
             @Override

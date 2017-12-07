@@ -7,8 +7,7 @@ import ch.qos.logback.core.LayoutBase;
 import org.slf4j.Marker;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 
 import static com.batch.escalog.LogFmtLayout.NativeKey.*;
 
@@ -20,10 +19,8 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
 {
     private static final String LOGFMT_CLASS = com.batch.escalog.LogFmt.class.getName();
 
-    /**
-     * Formats the time field
-     */
-    private ThreadLocal<SimpleDateFormat> simpleDateFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"));
+    private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
+
 
 // ----------------------------------->
 // logback.xml parameters
@@ -38,7 +35,52 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
      */
     private String appName = null;
 
+    /**
+     * The time format
+     */
+    private String timeFormat;
+
 // ----------------------------------->
+
+    /**
+     * Appenders registry by key
+     */
+    private final Map<String, KeyValueAppender> appenders = new HashMap<>();
+
+    /**
+     * List of appenders used if there's no field config
+     */
+    private final List<KeyValueAppender> defaultAppenders;
+
+    /**
+     * List of appenders used if there's a field config
+     */
+    private List<KeyValueAppender> customAppenders;
+
+    /**
+     * Formats the time field
+     */
+    private ThreadLocal<SimpleDateFormat> simpleDateFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat(timeFormat != null ? timeFormat : DATE_FORMAT));
+
+
+
+    public LogFmtLayout()
+    {
+        appenders.put(TIME.toString(),      this::timeAppender);
+        appenders.put(LEVEL.toString(),     this::levelAppender);
+        appenders.put(MESSAGE.toString(),   this::msgAppender);
+        appenders.put(THREAD.toString(),    this::threadAppender);
+        appenders.put("package",            this::packageAppender);
+        appenders.put("module",             this::moduleAppender);
+        appenders.put("mdc",                this::mdcAppender);
+        appenders.put("custom",             this::customFieldsAppender);
+        appenders.put(ERROR.toString(),     this::errorAppender);
+
+        this.defaultAppenders = new ArrayList<>(Arrays.asList(
+            this::timeAppender, this::levelAppender,this::threadAppender, this::packageAppender, this::moduleAppender,
+            this::msgAppender, this::mdcAppender, this::customFieldsAppender, this::errorAppender
+        ));
+    }
 
     public void setPrefix(String prefix)
     {
@@ -50,9 +92,33 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
         this.appName = appName;
     }
 
+    public void setTimeFormat(String timeFormat)
+    {
+        try
+        {
+            new SimpleDateFormat(timeFormat);
+            this.timeFormat = timeFormat;
+        }
+        catch ( Exception e ) {}
+    }
+
+
+    public void setFields(String fields)
+    {
+        customAppenders = new ArrayList<>();
+        for ( String field : fields.split(",") )
+        {
+            KeyValueAppender appender = appenders.get(field.trim());
+            if( appender != null )
+            {
+                customAppenders.add(appender);
+            }
+        }
+    }
+
 // ----------------------------------->
 
-    @Override
+
     public String doLayout(ILoggingEvent iLoggingEvent)
     {
         StringBuilder sb = new StringBuilder();
@@ -69,50 +135,40 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
             appendKeyValueAndEscape(sb, APP.toString(), appName);
         }
 
-
-        appendKeyValueAndEscape(sb, TIME.toString(), simpleDateFormat.get().format(new Date(iLoggingEvent.getTimeStamp())));
-        appendKeyValueAndEscape(sb, LEVEL.toString(), formatLogLevel(iLoggingEvent.getLevel()));
-
-
-        // package and module
-
-        StackTraceElement[] callerData = iLoggingEvent.getCallerData();
-        if( callerData != null && callerData.length > 0 )
+        for ( KeyValueAppender keyValueAppender : customAppenders != null ? customAppenders : defaultAppenders )
         {
-            String className = callerData[0].getClassName();
-
-            // FIXME this is dirty. Find a way to remove last callerData when log from LogFmt
-            if( className.equals(LOGFMT_CLASS) )
-            {
-                className = null;
-                if( callerData.length > 1 )
-                {
-                    className = callerData[1].getClassName();
-                }
-
-            }
-
-            if( className != null )
-            {
-                int lastPointPosition = className.lastIndexOf('.');
-                if( lastPointPosition >= 0 )
-                {
-                    appendKeyValueAndEscape(sb, "package", className.substring(0, lastPointPosition));
-                    appendKeyValueAndEscape(sb, "module", className.substring(lastPointPosition+1, className.length()));
-                }
-                // else (if root package)
-                else
-                {
-                    appendKeyValueAndEscape(sb, "package", "");
-                    appendKeyValueAndEscape(sb, "module", className);
-                }
-            }
+            keyValueAppender.append(sb, iLoggingEvent);
         }
 
-        appendKeyValueAndEscape(sb, THREAD.toString(), iLoggingEvent.getThreadName());
-        appendKeyValueAndEscape(sb, MESSAGE.toString(), iLoggingEvent.getFormattedMessage());
+        // removes the last space char and adds a carriage return
+        sb.setCharAt(sb.length() - 1, '\n');
 
-        // MDC
+        return sb.toString();
+    }
+
+
+    private void levelAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
+    {
+        appendKeyValueAndEscape(sb, LEVEL.toString(), formatLogLevel(iLoggingEvent.getLevel()));
+    }
+
+    private void timeAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
+    {
+        appendKeyValueAndEscape(sb, TIME.toString(), simpleDateFormat.get().format(new Date(iLoggingEvent.getTimeStamp())));
+    }
+
+    private void threadAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
+    {
+        appendKeyValueAndEscape(sb, THREAD.toString(), iLoggingEvent.getThreadName());
+    }
+
+    private void msgAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
+    {
+        appendKeyValueAndEscape(sb, MESSAGE.toString(), iLoggingEvent.getFormattedMessage());
+    }
+
+    private void mdcAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
+    {
         Map<String, String> mdc = iLoggingEvent.getMDCPropertyMap();
         if ( mdc != null )
         {
@@ -124,8 +180,10 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
                 }
             });
         }
+    }
 
-        // key-values
+    private void customFieldsAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
+    {
         Marker marker = iLoggingEvent.getMarker();
         if ( marker != null && marker instanceof LogFmtMarker )
         {
@@ -138,23 +196,72 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
                 }
             });
         }
+    }
 
-        // exception
+    private void errorAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
+    {
         if ( iLoggingEvent.getThrowableProxy() != null )
         {
             appendKeyValueAndEscape(sb, ERROR.toString(), ThrowableProxyUtil.asString(iLoggingEvent.getThrowableProxy()));
         }
-
-        // removes the last space char and adds a carriage return
-        sb.setCharAt(sb.length() - 1, '\n');
-
-        return sb.toString();
     }
+
+    private void packageAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
+    {
+        String className = getLastClassName(iLoggingEvent.getCallerData());
+        if ( className != null )
+        {
+            int lastPointPosition = className.lastIndexOf('.');
+            String pkg = lastPointPosition >= 0 ? className.substring(0, lastPointPosition) : "";
+            appendKeyValueAndEscape(sb, PACKAGE.toString(), pkg);
+        }
+
+    }
+
+    private void moduleAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
+    {
+        String className = getLastClassName(iLoggingEvent.getCallerData());
+        if ( className != null )
+        {
+            int lastPointPosition = className.lastIndexOf('.');
+            String module = lastPointPosition >= 0 ? className.substring(lastPointPosition + 1, className.length()) : className;
+            appendKeyValueAndEscape(sb, MODULE.toString(), module);
+        }
+
+    }
+
+    private String getLastClassName(StackTraceElement[] callerData)
+    {
+        String className = null;
+        if ( callerData != null && callerData.length > 0 )
+        {
+            className = callerData[ 0 ].getClassName();
+
+            // FIXME this is dirty. Find a way to remove last callerData when log from LogFmt
+            if ( className.equals(LOGFMT_CLASS) )
+            {
+                className = null;
+                if ( callerData.length > 1 )
+                {
+                    className = callerData[ 1 ].getClassName();
+                }
+
+            }
+        }
+        return className;
+    }
+
+    @FunctionalInterface
+    interface KeyValueAppender
+    {
+        void append(StringBuilder sb, ILoggingEvent iLoggingEvent);
+    }
+
 
     /**
      * Appends the given key and value (escaped with escapeJava(String string)) to the given StringBuilder (appends key="value")
      */
-    private StringBuilder appendKeyValueAndEscape(StringBuilder sb, String key, Object value)
+    private static StringBuilder appendKeyValueAndEscape(StringBuilder sb, String key, Object value)
     {
         if ( key == null )
         {
@@ -250,11 +357,13 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
         MESSAGE("msg"),
         APP("app"),
         THREAD("thread"),
+        PACKAGE("package"),
+        MODULE("module"),
         ERROR("error");
 
     // ----------------------------------->
 
-        private final String text;
+        final String text;
 
     // ----------------------------------->
 
