@@ -68,16 +68,6 @@ public class LogFmtBuilder implements org.slf4j.Logger
     }
 
 // ----------------------------------->
-
-    /**
-     * Creates a new LogFmt from org.slf4j.Logger
-     */
-    public static LogFmtBuilder wrap(org.slf4j.Logger logger)
-    {
-        return new LogFmtBuilder(logger);
-    }
-
-// ----------------------------------->
 // org.slf4j.Logger interface methods implementation
 
     @Override

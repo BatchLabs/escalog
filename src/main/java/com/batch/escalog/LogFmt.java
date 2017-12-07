@@ -42,6 +42,16 @@ public class LogFmt implements org.slf4j.Logger
     }
 
 // ----------------------------------->
+
+    /**
+     * Creates a new LogFmt from org.slf4j.Logger
+     */
+    public static LogFmt wrap(org.slf4j.Logger logger)
+    {
+        return new LogFmt(logger);
+    }
+
+// ----------------------------------->
 // org.slf4j.Logger interface methods implementation
 
     @Override
