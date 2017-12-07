@@ -64,8 +64,8 @@ public class LogFmtLayoutTest
     public void fieldsConfigTest()
     {
         LogFmtLayout logFmtLayout = new LogFmtLayout();
-
-        logFmtLayout.setFields("mdc, custom, level, msg");
+        logFmtLayout.setFields("time, mdc, custom, level, msg");
+        logFmtLayout.setTimeFormat("YYYY");
 
         Calendar calendar = Calendar.getInstance();
         calendar.set(2017, Calendar.NOVEMBER, 30, 15, 10, 25);
@@ -77,7 +77,7 @@ public class LogFmtLayoutTest
             with("key1", "value1").and("key2", "val ue2"), "message with \"double quotes\"", mdc);
 
         assertEquals(
-            "mdckey=\"mdc value\" key1=value1 key2=\"val ue2\" level=debug msg=\"message with \\\"double quotes\\\"\"\n",
+            "time=2017 mdckey=\"mdc value\" key1=value1 key2=\"val ue2\" level=debug msg=\"message with \\\"double quotes\\\"\"\n",
             logFmtLayout.doLayout(loggingEvent)
         );
     }

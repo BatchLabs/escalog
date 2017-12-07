@@ -19,6 +19,29 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
 {
     private static final String LOGFMT_CLASS = com.batch.escalog.LogFmt.class.getName();
 
+    private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
+
+
+// ----------------------------------->
+// logback.xml parameters
+
+    /**
+     * All the log lines will be prepended by this prefix (if present)
+     */
+    private String prefix = null;
+
+    /**
+     * The app name (adds the key app_name=[appName])
+     */
+    private String appName = null;
+
+    /**
+     * The time format
+     */
+    private String timeFormat;
+
+// ----------------------------------->
+
     /**
      * Appenders registry by key
      */
@@ -37,23 +60,9 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
     /**
      * Formats the time field
      */
-    private ThreadLocal<SimpleDateFormat> simpleDateFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"));
+    private ThreadLocal<SimpleDateFormat> simpleDateFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat(timeFormat != null ? timeFormat : DATE_FORMAT));
 
 
-// ----------------------------------->
-// logback.xml parameters
-
-    /**
-     * All the log lines will be prepended by this prefix (if present)
-     */
-    private String prefix = null;
-
-    /**
-     * The app name (adds the key app_name=[appName])
-     */
-    private String appName = null;
-
-// ----------------------------------->
 
     public LogFmtLayout()
     {
@@ -82,6 +91,17 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
     {
         this.appName = appName;
     }
+
+    public void setTimeFormat(String timeFormat)
+    {
+        try
+        {
+            new SimpleDateFormat(timeFormat);
+            this.timeFormat = timeFormat;
+        }
+        catch ( Exception e ) {}
+    }
+
 
     public void setFields(String fields)
     {
