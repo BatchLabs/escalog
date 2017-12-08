@@ -1,4 +1,5 @@
 # Escalog
+[![Build Status](https://travis-ci.org/BatchLabs/escalog.svg?branch=master)](https://travis-ci.org/BatchLabs/escalog)
 
 Allows to log in logfmt format with logback. See https://brandur.org/logfmt for more information about logfmt.
 
