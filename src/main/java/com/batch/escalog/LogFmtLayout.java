@@ -18,6 +18,7 @@ import static com.batch.escalog.LogFmtLayout.NativeKey.*;
 public class LogFmtLayout extends LayoutBase<ILoggingEvent>
 {
     private static final String LOGFMT_CLASS = com.batch.escalog.LogFmt.class.getName();
+    private static final String LOGFMTBUILDER_CLASS = com.batch.escalog.LogFmtBuilder.class.getName();
 
     private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
 
@@ -238,7 +239,7 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
             className = callerData[ 0 ].getClassName();
 
             // FIXME this is dirty. Find a way to remove last callerData when log from LogFmt
-            if ( className.equals(LOGFMT_CLASS) )
+            if ( className.equals(LOGFMT_CLASS) || className.equals(LOGFMTBUILDER_CLASS) )
             {
                 className = null;
                 if ( callerData.length > 1 )
