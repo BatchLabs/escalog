@@ -17,8 +17,6 @@ import static com.batch.escalog.LogFmtLayout.NativeKey.*;
  */
 public class LogFmtLayout extends LayoutBase<ILoggingEvent>
 {
-    private static final String LOGFMT_CLASS = com.batch.escalog.LogFmt.class.getName();
-    private static final String LOGFMTBUILDER_CLASS = com.batch.escalog.LogFmtBuilder.class.getName();
 
     private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
 
@@ -124,6 +122,7 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
     {
         StringBuilder sb = new StringBuilder();
 
+        System.out.println(iLoggingEvent.getLoggerName());
         // prefix
         if ( prefix != null )
         {
@@ -209,19 +208,22 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
 
     private void packageAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
     {
-        String className = getLastClassName(iLoggingEvent.getCallerData());
+        String className = iLoggingEvent.getLoggerName();
         if ( className != null )
         {
             int lastPointPosition = className.lastIndexOf('.');
             String pkg = lastPointPosition >= 0 ? className.substring(0, lastPointPosition) : "";
             appendKeyValueAndEscape(sb, PACKAGE.toString(), pkg);
+
+
+
         }
 
     }
 
     private void moduleAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
     {
-        String className = getLastClassName(iLoggingEvent.getCallerData());
+        String className = iLoggingEvent.getLoggerName();
         if ( className != null )
         {
             int lastPointPosition = className.lastIndexOf('.');
@@ -231,33 +233,11 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
 
     }
 
-    private String getLastClassName(StackTraceElement[] callerData)
-    {
-        String className = null;
-        if ( callerData != null && callerData.length > 0 )
-        {
-            className = callerData[ 0 ].getClassName();
-
-            // FIXME this is dirty. Find a way to remove last callerData when log from LogFmt
-            if ( className.equals(LOGFMT_CLASS) || className.equals(LOGFMTBUILDER_CLASS) )
-            {
-                className = null;
-                if ( callerData.length > 1 )
-                {
-                    className = callerData[ 1 ].getClassName();
-                }
-
-            }
-        }
-        return className;
-    }
-
     @FunctionalInterface
     interface KeyValueAppender
     {
         void append(StringBuilder sb, ILoggingEvent iLoggingEvent);
     }
-
 
     /**
      * Appends the given key and value (escaped with escapeJava(String string)) to the given StringBuilder (appends key="value")

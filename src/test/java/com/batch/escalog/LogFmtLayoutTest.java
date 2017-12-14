@@ -54,7 +54,7 @@ public class LogFmtLayoutTest
 
 
         assertEquals(
-            "prefix=\"prefix\" app=escalog time=\"2017-11-30T15:10:25\" level=debug thread=thread0 msg=\"message with \\\"double quotes\\\"\" key1=value1 key2=\"val ue2\"\n",
+            "prefix=\"prefix\" app=escalog time=\"2017-11-30T15:10:25\" level=debug thread=thread0 package=com.batch.escalog module=LogFmtLayoutTest msg=\"message with \\\"double quotes\\\"\" key1=value1 key2=\"val ue2\"\n",
             logFmtLayout.doLayout(loggingEvent)
         );
 
@@ -119,7 +119,7 @@ public class LogFmtLayoutTest
             @Override
             public String getLoggerName()
             {
-                return "loggerName";
+                return "com.batch.escalog.LogFmtLayoutTest";
             }
 
             @Override
