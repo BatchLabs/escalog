@@ -12,6 +12,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests the log lines output by LogFmt
@@ -60,6 +61,9 @@ public class LogFmtTest
         line = getEndLog(layoutProducer.consume());
         assertEquals("msg=message-without-spaces key1=value1 keyInt=143 keyBool=true\n", line);
 
+        logger.error("error message", new Exception("exception message"));
+        line = getEndLog(layoutProducer.consume());
+        assertTrue(line.startsWith("msg=\"error message\" error=\"java.lang.Exception: exception message\""));
     }
 
     /**

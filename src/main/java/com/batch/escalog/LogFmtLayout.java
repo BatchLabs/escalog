@@ -2,6 +2,7 @@ package com.batch.escalog;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.spi.ThrowableProxyUtil;
 import ch.qos.logback.core.LayoutBase;
 import org.slf4j.Marker;
@@ -201,9 +202,11 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
 
     private void errorAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
     {
-        if ( iLoggingEvent.getThrowableProxy() != null )
+        IThrowableProxy throwableProxy = iLoggingEvent.getThrowableProxy();
+        if ( throwableProxy != null )
         {
-            appendKeyValueAndEscape(sb, ERROR.toString(), iLoggingEvent.getThrowableProxy().getMessage());
+            StringBuilder sbError = new StringBuilder().append(throwableProxy.getClassName()).append(": ").append(throwableProxy.getMessage());
+            appendKeyValueAndEscape(sb, ERROR.toString(), sbError);
         }
     }
 
@@ -211,7 +214,7 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
     {
         if ( iLoggingEvent.getThrowableProxy() != null )
         {
-            appendKeyValueAndEscape(sb, ERROR.toString(), ThrowableProxyUtil.asString(iLoggingEvent.getThrowableProxy()));
+            appendKeyValueAndEscape(sb, STACK_TRACE.toString(), ThrowableProxyUtil.asString(iLoggingEvent.getThrowableProxy()));
         }
     }
 
