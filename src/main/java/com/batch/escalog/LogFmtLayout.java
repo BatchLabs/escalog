@@ -65,19 +65,20 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
 
     public LogFmtLayout()
     {
-        appenders.put(TIME.toString(),      this::timeAppender);
-        appenders.put(LEVEL.toString(),     this::levelAppender);
-        appenders.put(MESSAGE.toString(),   this::msgAppender);
-        appenders.put(THREAD.toString(),    this::threadAppender);
-        appenders.put("package",            this::packageAppender);
-        appenders.put("module",             this::moduleAppender);
-        appenders.put("mdc",                this::mdcAppender);
-        appenders.put("custom",             this::customFieldsAppender);
-        appenders.put(ERROR.toString(),     this::errorAppender);
+        appenders.put(TIME.toString(),          this::timeAppender);
+        appenders.put(LEVEL.toString(),         this::levelAppender);
+        appenders.put(MESSAGE.toString(),       this::msgAppender);
+        appenders.put(THREAD.toString(),        this::threadAppender);
+        appenders.put("package",                this::packageAppender);
+        appenders.put("module",                 this::moduleAppender);
+        appenders.put("mdc",                    this::mdcAppender);
+        appenders.put("custom",                 this::customFieldsAppender);
+        appenders.put(ERROR.toString(),         this::errorAppender);
+        appenders.put(STACK_TRACE.toString(),   this::stackTraceAppender);
 
         this.defaultAppenders = new ArrayList<>(Arrays.asList(
             this::timeAppender, this::levelAppender,this::threadAppender, this::packageAppender, this::moduleAppender,
-            this::msgAppender, this::mdcAppender, this::customFieldsAppender, this::errorAppender
+            this::msgAppender, this::mdcAppender, this::customFieldsAppender, this::errorAppender, this::stackTraceAppender
         ));
     }
 
@@ -202,6 +203,14 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
     {
         if ( iLoggingEvent.getThrowableProxy() != null )
         {
+            appendKeyValueAndEscape(sb, ERROR.toString(), iLoggingEvent.getThrowableProxy().getMessage());
+        }
+    }
+
+    private void stackTraceAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
+    {
+        if ( iLoggingEvent.getThrowableProxy() != null )
+        {
             appendKeyValueAndEscape(sb, ERROR.toString(), ThrowableProxyUtil.asString(iLoggingEvent.getThrowableProxy()));
         }
     }
@@ -214,9 +223,6 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
             int lastPointPosition = className.lastIndexOf('.');
             String pkg = lastPointPosition >= 0 ? className.substring(0, lastPointPosition) : "";
             appendKeyValueAndEscape(sb, PACKAGE.toString(), pkg);
-
-
-
         }
 
     }
@@ -340,7 +346,8 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
         THREAD("thread"),
         PACKAGE("package"),
         MODULE("module"),
-        ERROR("error");
+        ERROR("error"),
+        STACK_TRACE("stacktrace");
 
     // ----------------------------------->
 
