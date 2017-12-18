@@ -82,7 +82,8 @@ Here is the list of native key-value pairs that are automatically added.
 | `msg`| given message |
 | `app`| app name (if provided) |
 | `thread`| thread name |
-| `error`| exception (if provided) : *ex: logger.error(new Exception("error"), "Something went wrong")* |
+| `error`| exception message (if provided) : *ex: logger.error(new Exception("error"), "Something went wrong")* |
+| `stacktrace`| exception stack trace (if provided) |
 | `package`| Java package |
 | `module`| Java class |
 
