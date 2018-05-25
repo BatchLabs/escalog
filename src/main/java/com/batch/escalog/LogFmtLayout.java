@@ -327,7 +327,6 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
                 case '\n': sb.append("\\n");    break;
                 case '\r': sb.append("\\r");    break;
                 case '\f': sb.append("\\f");    break;
-                case '\'': sb.append("\\'");    break;
                 case '\"': sb.append("\\\"");   break;
                 case '\\': sb.append("\\\\");   break;
                 default:   sb.append(c);
