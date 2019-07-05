@@ -12,6 +12,15 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>klarrio</id>
+            <name>Klarrio Artifactory</name>
+            <url>https://klarrio.jfrog.io/klarrio/jvm-libs</url>
+            <layout>default</layout>
+        </repository>
+    </repositories>
+
     <build>
         <plugins>
             <plugin>
@@ -42,6 +51,29 @@
                         <goals>
                             <goal>jar</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jfrog.buildinfo</groupId>
+                <artifactId>artifactory-maven-plugin</artifactId>
+                <version>2.6.1</version>
+                <inherited>false</inherited>
+                <executions>
+                    <execution>
+                        <id>build-info</id>
+                        <goals>
+                            <goal>publish</goal>
+                        </goals>
+                        <configuration>
+                            <publisher>
+                                <contextUrl>https://klarrio.jfrog.io/klarrio</contextUrl>
+                                <username>${artifactoryusername}</username>
+                                <password>${artifactorypassword}</password>
+                                <repoKey>jvm-libs-local</repoKey>
+                                <snapshotRepoKey>jvm-libs-local</snapshotRepoKey>
+                            </publisher>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
